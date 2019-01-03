@@ -1,8 +1,5 @@
 package mhalma.advent201807
 
-import java.lang.IllegalArgumentException
-import java.util.*
-
 data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf()) {
     fun addDependency(dependency: Step) {
         dependencies.add(dependency)
@@ -48,14 +45,13 @@ fun parseSteps(descriptions: List<String>): Set<Step> {
 }
 
 fun calculateStepOrder(descriptions: List<String>): String {
-    val steps = parseSteps(descriptions).toList()
-    Collections.sort(steps) {
-        p0, p1 -> when {
-            p0 == null || p1 == null -> throw IllegalArgumentException("cannot compare null steps")
-            p1.dependencies.contains(p0) -> -1
-            p0.dependencies.contains(p1) -> 1
-            else -> p0.id.compareTo(p1.id)
-        }
+    val steps = parseSteps(descriptions).toMutableSet()
+    val orderedSteps = mutableListOf<Step>()
+    while (steps.size > 0) {
+        val next = steps.filter { it.dependencies.size == 0 }.sortedBy { it.id }.take(1)[0]
+        orderedSteps.add(next)
+        steps.remove(next)
+        steps.forEach { it.dependencies.remove(next) }
     }
-    return steps.map { it.id }.joinToString("")
+    return orderedSteps.map { it.id }.joinToString("")
 }

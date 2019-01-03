@@ -64,4 +64,9 @@ class StepParserTest {
     fun `calculate order of steps`() {
         assertThat(calculateStepOrder(getStepsFromFile("example.txt")), `is`("CABDFE"))
     }
+
+    @Test
+    fun `complete part 1`() {
+        assertThat(calculateStepOrder(getStepsFromFile("puzzleInput.txt")), `is`("BITRAQVSGUWKXYHMZPOCDLJNFE"))
+    }
 }

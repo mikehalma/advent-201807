@@ -42,8 +42,8 @@ fun parseSteps(descriptions: List<String>): Set<Step> {
 
     descriptions.forEach {
         val (stepId, dependencyId) = parseStep(it)
-        val step = steps.find { it.id == stepId}?:Step(stepId, mutableSetOf())
-        val dependency = steps.find { it.id == dependencyId}?:Step(dependencyId, mutableSetOf())
+        val step = steps.find { it.id == stepId}?:Step(stepId)
+        val dependency = steps.find { it.id == dependencyId}?:Step(dependencyId)
         step.addDependency(dependency)
         if (!steps.contains(step)) steps.add(step)
         if (!steps.contains(dependency)) steps.add(dependency)
@@ -89,7 +89,7 @@ data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLef
     }
 }
 
-class Work(val workers: List<Worker>) {
+class Work(private val workers: List<Worker>) {
     fun stepsInProgress(): List<Step> {
         return this.workers.map {it.currentStep}.filter {it != Step('0')}
     }
@@ -120,7 +120,7 @@ class Work(val workers: List<Worker>) {
 }
 
 fun calculateDuration(steps: Set<Step>, minDuration: Int, workers: Int): Int {
-    val work = Work((1..workers).map { worker -> Worker(worker) }.toList())
+    val work = Work((1..workers).map {Worker(it)}.toList())
     val incompleteSteps = steps.toMutableSet()
 
     (0..Int.MAX_VALUE).forEach { second ->
@@ -136,8 +136,7 @@ fun calculateDuration(steps: Set<Step>, minDuration: Int, workers: Int): Int {
             nextStepsNotBeingWorked.removeAll(assignedSteps)
         }
 
-        val finishedSteps = work.performWork()
-        finishedSteps.forEach {step ->
+        work.performWork().forEach {step ->
             incompleteSteps.remove(step)
             incompleteSteps.forEach { it.dependencies.remove(step) }
         }

@@ -69,4 +69,16 @@ class StepParserTest {
     fun `complete part 1`() {
         assertThat(calculateStepOrder(getStepsFromFile("puzzleInput.txt")), `is`("BITRAQVSGUWKXYHMZPOCDLJNFE"))
     }
+
+    @Test
+    fun `calculate duration of steps for example`() {
+        assertThat(calculateDuration(parseSteps(getStepsFromFile("example.txt")).toMutableSet(), 0, 2), `is`(15))
+    }
+
+    @Test
+    fun `get step time`() {
+        assertThat(getStepTime(Step('A'), 0), `is`(1))
+        assertThat(getStepTime(Step('B'), 1), `is`(3))
+        assertThat(getStepTime(Step('Z'), 26), `is`(52))
+    }
 }

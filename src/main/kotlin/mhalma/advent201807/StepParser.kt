@@ -1,6 +1,8 @@
 package mhalma.advent201807
 
 data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf()) {
+    private val STEP_VALUES = 'A'.rangeTo('Z')
+
     fun addDependency(dependency: Step) {
         dependencies.add(dependency)
     }
@@ -18,6 +20,10 @@ data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf(
 
     override fun toString(): String {
         return "Step ${this.id}, dependencies ${this.dependencies.map {it.id}.joinToString("")}"
+    }
+
+    fun getStepTime(minDuration: Int): Int {
+        return STEP_VALUES.indexOf(this.id) + minDuration + 1
     }
 }
 
@@ -64,7 +70,22 @@ fun getAllNextSteps(steps: List<Step>): List<Step> {
     return steps.filter { it.dependencies.size == 0 }.sortedBy { it.id }
 }
 
-data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLeft: Int = 0)
+data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLeft: Int = 0) {
+    fun assignStep(step: Step, minDuration: Int) {
+        this.currentStep = step
+        this.secondsLeft = step.getStepTime(minDuration)
+    }
+
+    fun performWork(): Step? {
+        this.secondsLeft -= 1
+        if (this.secondsLeft == 0) {
+            val step = this.currentStep
+            this.currentStep = Step('0')
+            return step
+        }
+        return null
+    }
+}
 
 class Work(val workers: List<Worker>) {
     fun stepsInProgress(): List<Step> {
@@ -76,14 +97,14 @@ class Work(val workers: List<Worker>) {
     }
 
     fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
-        val assignedSteps = mutableListOf<Step>()
         val availableStepsRemaining = availableSteps.toMutableSet()
+        val assignedSteps = mutableListOf<Step>()
+
         this.workers.filter {it.secondsLeft == 0}.forEach { worker ->
             if (availableStepsRemaining.size > 0) {
                 val nextStep = availableStepsRemaining.first()
                 availableStepsRemaining.remove(nextStep)
-                worker.currentStep = nextStep
-                worker.secondsLeft = getStepTime(nextStep, minDuration)
+                worker.assignStep(nextStep, minDuration)
                 assignedSteps.add(nextStep)
             }
         }
@@ -93,40 +114,36 @@ class Work(val workers: List<Worker>) {
     fun performWork(): List<Step> {
         val finishedSteps = mutableListOf<Step>()
         this.workers.filter {it.secondsLeft > 0}.forEach {worker ->
-            worker.secondsLeft -= 1
-            if (worker.secondsLeft == 0) {
-                finishedSteps.add(worker.currentStep)
-                worker.currentStep = Step('0')
+            val finishedStep = worker.performWork()
+            if (finishedStep != null) {
+                finishedSteps.add(finishedStep)
             }
         }
         return finishedSteps.toList()
     }
 }
 
-fun calculateDuration(steps: MutableSet<Step>, minDuration: Int, workers: Int): Int {
+fun calculateDuration(steps: Set<Step>, minDuration: Int, workers: Int): Int {
     val work = Work((1..workers).map { worker -> Worker(worker) }.toList())
+    val incompleteSteps = steps.toMutableSet()
+
     (0..Int.MAX_VALUE).forEach { second ->
-        if (steps.size == 0) {
+        if (incompleteSteps.size == 0) {
             return second
         }
 
         val stepsBeingWorked = work.stepsInProgress()
-        val nextStepsNotBeingWorked = getAllNextSteps(steps.toList()).filterNot {stepsBeingWorked.contains(it)}.toMutableSet()
+        val nextStepsNotBeingWorked = getAllNextSteps(incompleteSteps.toList()).filterNot {stepsBeingWorked.contains(it)}.toMutableSet()
 
-        while (nextStepsNotBeingWorked.size > 0 && work.hasIdleWorkers()) {
+        while (nextStepsNotBeingWorked.isNotEmpty() && work.hasIdleWorkers()) {
             nextStepsNotBeingWorked.removeAll(work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration))
         }
 
         val finishedSteps = work.performWork()
         finishedSteps.forEach {step ->
-            steps.remove(step)
-            steps.forEach { it.dependencies.remove(step) }
+            incompleteSteps.remove(step)
+            incompleteSteps.forEach { it.dependencies.remove(step) }
         }
     }
     return Int.MAX_VALUE
-}
-
-
-fun getStepTime(step: Step, minDuration: Int): Int {
-    return 'A'.rangeTo('Z').indexOf(step.id) + minDuration + 1
 }

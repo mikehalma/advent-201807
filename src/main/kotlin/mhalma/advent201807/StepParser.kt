@@ -64,46 +64,64 @@ fun getAllNextSteps(steps: List<Step>): List<Step> {
     return steps.filter { it.dependencies.size == 0 }.sortedBy { it.id }
 }
 
-data class WorkerActivity(val id: Int, var currentStep: Step, var secondsLeft: Int)
+data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLeft: Int = 0)
+
+class Work(val workers: List<Worker>) {
+    fun stepsInProgress(): List<Step> {
+        return this.workers.map {it.currentStep}.filter {it != Step('0')}
+    }
+
+    fun hasIdleWorkers(): Boolean {
+        return this.workers.count {it.currentStep == Step('0')} > 0
+    }
+
+    fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
+        val assignedSteps = mutableListOf<Step>()
+        val availableStepsRemaining = availableSteps.toMutableSet()
+        this.workers.filter {it.secondsLeft == 0}.forEach { worker ->
+            if (availableStepsRemaining.size > 0) {
+                val nextStep = availableStepsRemaining.first()
+                availableStepsRemaining.remove(nextStep)
+                worker.currentStep = nextStep
+                worker.secondsLeft = getStepTime(nextStep, minDuration)
+                assignedSteps.add(nextStep)
+            }
+        }
+        return assignedSteps.toList()
+    }
+
+    fun performWork(): List<Step> {
+        val finishedSteps = mutableListOf<Step>()
+        this.workers.filter {it.secondsLeft > 0}.forEach {worker ->
+            worker.secondsLeft -= 1
+            if (worker.secondsLeft == 0) {
+                finishedSteps.add(worker.currentStep)
+                worker.currentStep = Step('0')
+            }
+        }
+        return finishedSteps.toList()
+    }
+}
 
 fun calculateDuration(steps: MutableSet<Step>, minDuration: Int, workers: Int): Int {
-    var workerActivities = (1..workers).map { worker -> WorkerActivity(worker,Step('0'), 0) }.toList()
+    val work = Work((1..workers).map { worker -> Worker(worker) }.toList())
     (0..Int.MAX_VALUE).forEach { second ->
         if (steps.size == 0) {
             return second
         }
 
-        val stepsBeingWorked = workerActivities.map {it.currentStep}.filter {it != Step('0')}
+        val stepsBeingWorked = work.stepsInProgress()
         val nextStepsNotBeingWorked = getAllNextSteps(steps.toList()).filterNot {stepsBeingWorked.contains(it)}.toMutableSet()
 
-        while (nextStepsNotBeingWorked.size > 0 && workerActivities.count {it.currentStep == Step('0')} > 0) {
-
-            workerActivities = workerActivities.map { workerActivity ->
-                if (workerActivity.secondsLeft > 0) {
-                    workerActivity
-                } else {
-                    if (nextStepsNotBeingWorked.size > 0) {
-                        workerActivity.currentStep = nextStepsNotBeingWorked.first()
-                        workerActivity.secondsLeft = getStepTime(workerActivity.currentStep, minDuration)
-                        nextStepsNotBeingWorked.remove(workerActivity.currentStep)
-                    }
-                   workerActivity
-                }
-            }.toList()
+        while (nextStepsNotBeingWorked.size > 0 && work.hasIdleWorkers()) {
+            nextStepsNotBeingWorked.removeAll(work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration))
         }
 
-        workerActivities = workerActivities.map { workerActivity ->
-            if (workerActivity.secondsLeft > 0) {
-                workerActivity.secondsLeft -= 1
-                if (workerActivity.secondsLeft == 0) {
-                    steps.remove(workerActivity.currentStep)
-                    steps.forEach { it.dependencies.remove(workerActivity.currentStep) }
-                    workerActivity.currentStep = Step('0')
-                }
-
-            }
-            workerActivity
-        }.toList()
+        val finishedSteps = work.performWork()
+        finishedSteps.forEach {step ->
+            steps.remove(step)
+            steps.forEach { it.dependencies.remove(step) }
+        }
     }
     return Int.MAX_VALUE
 }

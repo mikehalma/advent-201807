@@ -112,14 +112,12 @@ class Work(val workers: List<Worker>) {
     }
 
     fun performWork(): List<Step> {
-        val finishedSteps = mutableListOf<Step>()
-        this.workers.filter {it.secondsLeft > 0}.forEach {worker ->
-            val finishedStep = worker.performWork()
-            if (finishedStep != null) {
-                finishedSteps.add(finishedStep)
-            }
-        }
-        return finishedSteps.toList()
+        return this.workers
+                .filter {it.secondsLeft > 0}
+                .map {it.performWork()}
+                .filter {it != null}
+                .map {it as Step}
+                .toList()
     }
 }
 

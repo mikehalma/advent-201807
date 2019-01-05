@@ -84,12 +84,12 @@ class StepParserTest {
 
     @Test
     fun `calculate duration of steps for part 2`() {
-        assertThat(calculateDuration(parseSteps(getStepsFromFile("puzzleInput.txt")).toMutableSet(), 60, 5), `is`(15))
+        assertThat(calculateDuration(parseSteps(getStepsFromFile("puzzleInput.txt")).toMutableSet(), 60, 5), `is`(869))
     }
 
     /**
      * TODO
-     *  - Put the steps we are working on into their own class and refer to that clas
+     *  - Put the steps we are working on into their own class and refer to that class
      *  - split up StepParser so classes with content have their own file, and write missing unit tests
      *  - create a rest endpoint for each part of the puzzle
      *  - think about thread safety and try to break it - or is immutability working ok

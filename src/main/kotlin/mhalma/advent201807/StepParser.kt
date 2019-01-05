@@ -1,5 +1,7 @@
 package mhalma.advent201807
 
+import kotlin.streams.toList
+
 data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf()) {
     private val STEP_VALUES = 'A'.rangeTo('Z')
 
@@ -97,18 +99,14 @@ class Work(val workers: List<Worker>) {
     }
 
     fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
-        val availableStepsRemaining = availableSteps.toMutableSet()
-        val assignedSteps = mutableListOf<Step>()
+        return availableSteps.stream()
+                .peek {firstIdle()?.assignStep(it, minDuration)}
+                .filter {stepsInProgress().contains(it)}
+                .toList()
+    }
 
-        this.workers.filter {it.secondsLeft == 0}.forEach { worker ->
-            if (availableStepsRemaining.size > 0) {
-                val nextStep = availableStepsRemaining.first()
-                availableStepsRemaining.remove(nextStep)
-                worker.assignStep(nextStep, minDuration)
-                assignedSteps.add(nextStep)
-            }
-        }
-        return assignedSteps.toList()
+    private fun firstIdle(): Worker? {
+        return this.workers.filter {it.secondsLeft == 0}.firstOrNull()
     }
 
     fun performWork(): List<Step> {
@@ -134,7 +132,8 @@ fun calculateDuration(steps: Set<Step>, minDuration: Int, workers: Int): Int {
         val nextStepsNotBeingWorked = getAllNextSteps(incompleteSteps.toList()).filterNot {stepsBeingWorked.contains(it)}.toMutableSet()
 
         while (nextStepsNotBeingWorked.isNotEmpty() && work.hasIdleWorkers()) {
-            nextStepsNotBeingWorked.removeAll(work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration))
+            val assignedSteps = work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration)
+            nextStepsNotBeingWorked.removeAll(assignedSteps)
         }
 
         val finishedSteps = work.performWork()

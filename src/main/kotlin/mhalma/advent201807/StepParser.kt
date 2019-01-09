@@ -29,6 +29,33 @@ data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf(
     }
 }
 
+data class Steps(val steps: MutableSet<Step> = mutableSetOf()) {
+    fun isNotEmpty() = this.steps.size > 0
+
+    fun isEmpty() = this.steps.size == 0
+
+    fun getAvailableSteps(): List<Step> {
+        return steps.filter { it.dependencies.isEmpty() }.sortedBy { it.id }
+    }
+
+    fun getNextAvailableStep(): Step {
+        return getAvailableSteps().take(1)[0]
+    }
+
+    fun add(step : Step) = this.steps.add(step)
+
+    fun remove(step: Step) {
+        this.steps.remove(step)
+        this.steps.forEach {it.dependencies.remove(step)}
+    }
+
+    fun removeAll(steps: List<Step>) {
+        steps.forEach {remove(it)}
+    }
+
+    override fun toString() = steps.map { it.id }.joinToString("")
+}
+
 fun parseStep(description: String): Pair<Char, Char> {
     val regex = """.*([A-Z]).*([A-Z])""".toRegex()
     val result = regex.find(description)
@@ -36,7 +63,7 @@ fun parseStep(description: String): Pair<Char, Char> {
     return Pair(id.toCharArray()[0], dependency.toCharArray()[0])
 }
 
-fun parseSteps(descriptions: List<String>): Set<Step> {
+fun parseSteps(descriptions: List<String>): Steps {
 
     val steps = mutableSetOf<Step>()
 
@@ -49,28 +76,20 @@ fun parseSteps(descriptions: List<String>): Set<Step> {
         if (!steps.contains(dependency)) steps.add(dependency)
     }
 
-    return steps
+    return Steps(steps)
 }
 
 fun calculateStepOrder(descriptions: List<String>): String {
-    val steps = parseSteps(descriptions).toMutableSet()
-    val orderedSteps = mutableListOf<Step>()
-    while (steps.size > 0) {
-        val next = getNextStep(steps.toList())
+    val steps = parseSteps(descriptions)
+    val orderedSteps = Steps()
+    while (steps.isNotEmpty()) {
+        val next = steps.getNextAvailableStep()
         orderedSteps.add(next)
         steps.remove(next)
-        steps.forEach { it.dependencies.remove(next) }
     }
-    return orderedSteps.map { it.id }.joinToString("")
+    return orderedSteps.toString()
 }
 
-fun getNextStep(steps: List<Step>): Step {
-    return getAllNextSteps(steps).take(1)[0]
-}
-
-fun getAllNextSteps(steps: List<Step>): List<Step> {
-    return steps.filter { it.dependencies.size == 0 }.sortedBy { it.id }
-}
 
 data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLeft: Int = 0) {
     fun assignStep(step: Step, minDuration: Int) {
@@ -119,27 +138,27 @@ class Work(private val workers: List<Worker>) {
     }
 }
 
-fun calculateDuration(steps: Set<Step>, minDuration: Int, workers: Int): Int {
+fun calculateDuration(steps: Steps, minDuration: Int, workers: Int): Int {
     val work = Work((1..workers).map {Worker(it)}.toList())
-    val incompleteSteps = steps.toMutableSet()
+    val incompleteSteps = Steps(steps.steps)
 
     (0..Int.MAX_VALUE).forEach { second ->
-        if (incompleteSteps.size == 0) {
-            return second
-        }
 
-        val stepsBeingWorked = work.stepsInProgress()
-        val nextStepsNotBeingWorked = getAllNextSteps(incompleteSteps.toList()).filterNot {stepsBeingWorked.contains(it)}.toMutableSet()
+        with (incompleteSteps) {
+            if (isEmpty()) {
+                return second
+            }
 
-        while (nextStepsNotBeingWorked.isNotEmpty() && work.hasIdleWorkers()) {
-            val assignedSteps = work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration)
-            nextStepsNotBeingWorked.removeAll(assignedSteps)
-        }
+            val stepsBeingWorked = work.stepsInProgress()
+            val nextStepsNotBeingWorked = getAvailableSteps().filterNot { stepsBeingWorked.contains(it) }.toMutableSet()
 
-        work.performWork().forEach {step ->
-            incompleteSteps.remove(step)
-            incompleteSteps.forEach { it.dependencies.remove(step) }
+            while (nextStepsNotBeingWorked.isNotEmpty() && work.hasIdleWorkers()) {
+                val assignedSteps = work.startIdleWorkers(nextStepsNotBeingWorked.toList(), minDuration)
+                nextStepsNotBeingWorked.removeAll(assignedSteps)
+            }
+
+            removeAll(work.performWork())
         }
     }
-    return Int.MAX_VALUE
+    throw IllegalStateException("The puzzle appears to be unsolvable.")
 }

@@ -23,7 +23,7 @@ class StepParserTest {
         val stepA = Step('A')
         val stepF = Step('F')
         val stepC = Step('C', mutableSetOf(stepA, stepF))
-        assertThat(parseSteps(stepDescriptions), `is`(setOf(stepA, stepC, stepF)))
+        assertThat(parseSteps(stepDescriptions), `is`(Steps(mutableSetOf(stepA, stepC, stepF))))
     }
 
     @Test
@@ -53,10 +53,10 @@ class StepParserTest {
         val expected = setOf(stepE, stepB, stepD, stepF, stepA, stepC)
 
         val actual = parseSteps(getStepsFromFile("example.txt"))
-        assertThat(actual, containsInAnyOrder(*expected.toTypedArray()))
+        assertThat(actual.steps, containsInAnyOrder(*expected.toTypedArray()))
         expected.forEach{step ->
             println("checking step ${step.id}")
-            assertThat(actual.find {it == step}?.dependencies, containsInAnyOrder(*step.dependencies.toTypedArray()))
+            assertThat(actual.steps.find {it == step}?.dependencies, containsInAnyOrder(*step.dependencies.toTypedArray()))
         }
     }
 
@@ -72,7 +72,7 @@ class StepParserTest {
 
     @Test
     fun `calculate duration of steps for example`() {
-        assertThat(calculateDuration(parseSteps(getStepsFromFile("example.txt")).toMutableSet(), 0, 2), `is`(15))
+        assertThat(calculateDuration(parseSteps(getStepsFromFile("example.txt")), 0, 2), `is`(15))
     }
 
     @Test
@@ -84,12 +84,12 @@ class StepParserTest {
 
     @Test
     fun `calculate duration of steps for part 2`() {
-        assertThat(calculateDuration(parseSteps(getStepsFromFile("puzzleInput.txt")).toMutableSet(), 60, 5), `is`(869))
+        assertThat(calculateDuration(parseSteps(getStepsFromFile("puzzleInput.txt")), 60, 5), `is`(869))
     }
 
     /**
      * TODO
-     *  - Put the steps we are working on into their own class and refer to that class
+     *  -* Put the steps we are working on into their own class and refer to that class
      *  - split up StepParser so classes with content have their own file, and write missing unit tests
      *  - create a rest endpoint for each part of the puzzle
      *  - think about thread safety and try to break it - or is immutability working ok

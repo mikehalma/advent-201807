@@ -1,12 +1,11 @@
 package mhalma.advent201807
 
-import mhalma.advent201807.Step.Companion.EMPTY_STEP
 import kotlin.streams.toList
 
 class Work(private val workers: List<Worker>) {
 
     fun stepsInProgress(): List<Step> {
-        return this.workers.map {it.currentStep}.filter {it != EMPTY_STEP}
+        return this.workers.filterNot {it.notWorking()}.map {it.currentStep}
     }
 
     fun hasIdleWorkers(): Boolean {

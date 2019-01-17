@@ -1,5 +1,7 @@
 package mhalma.advent201807
 
+import org.springframework.util.ResourceUtils
+
 fun parseStep(description: String): Pair<Char, Char> {
     val regex = """.*([A-Z]).*([A-Z])""".toRegex()
     val result = regex.find(description)
@@ -22,6 +24,8 @@ fun parseSteps(descriptions: List<String>): Steps {
 
     return Steps(steps)
 }
+
+fun getStepsFromFile(fileName: String) = ResourceUtils.getFile("classpath:$fileName").readLines()
 
 fun calculateStepOrder(descriptions: List<String>): String {
     val steps = parseSteps(descriptions)

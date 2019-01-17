@@ -22,6 +22,6 @@ data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLef
     }
 
     fun notWorking(): Boolean {
-        return this.secondsLeft == 0 && this.currentStep.isEmpty()
+        return this.secondsLeft == 0
     }
 }

@@ -40,7 +40,6 @@ class StepParserTest {
         assertThat(getStepsFromFile("example.txt"), `is`(expected))
     }
 
-    private fun getStepsFromFile(fileName: String) = ResourceUtils.getFile("classpath:$fileName").readLines()
 
     @Test
     fun `parse example from file`() {

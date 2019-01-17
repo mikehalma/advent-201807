@@ -53,4 +53,6 @@ class WorkTest {
         assertThat(Work(listOf(worker, worker2)).stepsInProgress(), containsInAnyOrder(Step('A'), Step('B')))
     }
 
+    // bored now
+
 }

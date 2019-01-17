@@ -17,11 +17,11 @@ data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLef
 
     private fun removeCurrentStep(): Step {
         val step = this.currentStep
-        this.currentStep = Step.EMPTY_STEP
+        this.currentStep.isEmpty()
         return step
     }
 
     fun notWorking(): Boolean {
-        return this.secondsLeft == 0 && this.currentStep == Step.EMPTY_STEP
+        return this.secondsLeft == 0 && this.currentStep.isEmpty()
     }
 }

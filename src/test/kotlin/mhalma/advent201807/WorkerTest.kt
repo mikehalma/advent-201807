@@ -54,7 +54,7 @@ class WorkerTest {
         while (worker.secondsLeft > 0) {
             worker.performWork()
         }
-        assertThat(worker.currentStep, `is`(Step.EMPTY_STEP))
+        assertThat(worker.currentStep.isEmpty(), `is`(true))
     }
 
     @Test

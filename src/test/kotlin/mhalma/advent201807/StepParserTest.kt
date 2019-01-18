@@ -59,34 +59,4 @@ class StepParserTest {
         }
     }
 
-    @Test
-    fun `calculate order of steps`() {
-        assertThat(calculateStepOrder(getStepsFromFile("example.txt")), `is`("CABDFE"))
-    }
-
-    @Test
-    fun `complete part 1`() {
-        assertThat(calculateStepOrder(getStepsFromFile("puzzleInput.txt")), `is`("BITRAQVSGUWKXYHMZPOCDLJNFE"))
-    }
-
-    @Test
-    fun `calculate duration of steps for example`() {
-        assertThat(calculateDuration(parseSteps(getStepsFromFile("example.txt")), 0, 2), `is`(15))
-    }
-
-    @Test
-    fun `calculate duration of steps for part 2`() {
-        assertThat(calculateDuration(parseSteps(getStepsFromFile("puzzleInput.txt")), 60, 5), `is`(869))
-    }
-
-    /**
-     * TODO
-     *  -* Put the steps we are working on into their own class and refer to that class
-     *  - split up StepParser so classes with content have their own file, and write missing unit tests
-     *  -- finish tests for Steps, Worker and Work
-     *  -- split parts1 and 2 from StepParser
-     *  - create a rest endpoint for each part of the puzzle
-     *  - think about thread safety and try to break it - or is immutability working ok
-     *
-     */
 }

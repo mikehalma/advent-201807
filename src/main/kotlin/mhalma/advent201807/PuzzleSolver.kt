@@ -13,25 +13,14 @@ fun calculateStepOrder(descriptions: List<String>): String {
 
 
 fun calculateDuration(steps: Steps, minDuration: Int, workers: Int): Int {
-    val work = Work((1..workers).map {Worker(it)}.toList())
-    val incompleteSteps = Steps(steps)
-
+    val work = Work((1..workers).map {Worker(it)}.toList(), Steps(steps), minDuration)
     (0..Int.MAX_VALUE).forEach { second ->
-
-        with (incompleteSteps) {
-            if (isEmpty()) {
+        with (work) {
+            if (incompleteSteps.isEmpty()) {
                 return second
             }
-
-            val stepsBeingWorked = work.stepsInProgress()
-            val availableStepsNotBeingWorked = getAvailableSteps().filterNot { stepsBeingWorked.contains(it) }.toMutableSet()
-
-            while (availableStepsNotBeingWorked.isNotEmpty() && work.hasIdleWorkers()) {
-                val assignedSteps = work.startIdleWorkers(availableStepsNotBeingWorked.toList(), minDuration)
-                availableStepsNotBeingWorked.removeAll(assignedSteps)
-            }
-
-            removeAll(work.performWork())
+            assignWork()
+            performWork()
         }
     }
     throw IllegalStateException("The puzzle appears to be unsolvable.")

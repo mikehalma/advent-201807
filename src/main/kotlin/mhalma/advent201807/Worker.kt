@@ -17,7 +17,7 @@ data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLef
 
     private fun removeCurrentStep(): Step {
         val step = this.currentStep
-        this.currentStep.isEmpty()
+        this.currentStep = Step.EMPTY_STEP
         return step
     }
 

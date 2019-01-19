@@ -2,7 +2,7 @@ package mhalma.advent201807
 
 import kotlin.streams.toList
 
-class Work(private val workers: List<Worker>) {
+class Work(private val workers: List<Worker>, val incompleteSteps: Steps = Steps(), private val minDuration: Int = 0) {
 
     fun stepsInProgress(): List<Step> {
         return this.workers.filterNot {it.notWorking()}.map {it.currentStep}
@@ -25,12 +25,23 @@ class Work(private val workers: List<Worker>) {
                 .firstOrNull()
     }
 
-    fun performWork(): List<Step> {
-        return this.workers
+    fun performWork() {
+        this.workers
                 .filter {!it.notWorking()}
                 .map {it.performWork()}
                 .filter {it != null}
                 .map {it as Step}
-                .toList()
+                .map {incompleteSteps.remove(it)}
+    }
+
+    fun assignWork() {
+        val stepsBeingWorked = stepsInProgress()
+        val availableStepsNotBeingWorked = incompleteSteps.getAvailableSteps().filterNot { stepsBeingWorked.contains(it) }.toMutableSet()
+
+        while (availableStepsNotBeingWorked.isNotEmpty() && hasIdleWorkers()) {
+            val assignedSteps = startIdleWorkers(availableStepsNotBeingWorked.toList(), minDuration)
+            availableStepsNotBeingWorked.removeAll(assignedSteps)
+        }
+
     }
 }

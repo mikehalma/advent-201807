@@ -5,7 +5,7 @@ data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf(
     private val STEP_VALUES = 'A'.rangeTo('Z')
 
     companion object {
-        private val EMPTY_STEP: Step = Step('0')
+        val EMPTY_STEP: Step = Step('0')
     }
 
     fun addDependency(dependency: Step) {

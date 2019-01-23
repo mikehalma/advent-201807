@@ -4,7 +4,6 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.greaterThan
 import org.junit.Test
-import org.mockito.ArgumentMatchers.isNull
 
 class WorkerTest {
 
@@ -54,24 +53,24 @@ class WorkerTest {
         while (worker.secondsLeft > 0) {
             worker.performWork()
         }
-        assertThat(worker.currentStep.isEmpty(), `is`(true))
+        assertThat(worker.currentStep == null, `is`(true))
     }
 
     @Test
-    fun `notWorking is working`() {
+    fun `working is working`() {
         val worker = Worker(1)
         worker.assignStep(Step('A'), 0)
-        assertThat(worker.notWorking(), `is`(false))
+        assertThat(worker.working(), `is`(true))
     }
 
     @Test
-    fun `notWorking is not working`() {
+    fun `working is not working`() {
         val worker = Worker(1)
         worker.assignStep(Step('A'), 0)
         while (worker.secondsLeft > 0) {
             worker.performWork()
         }
-        assertThat(worker.notWorking(), `is`(true))
+        assertThat(worker.working(), `is`(false))
     }
 
 }

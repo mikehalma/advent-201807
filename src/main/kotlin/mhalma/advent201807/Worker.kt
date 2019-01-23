@@ -1,6 +1,6 @@
 package mhalma.advent201807
 
-data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLeft: Int = 0) {
+data class Worker(val id: Int, var currentStep: Step? = null, var secondsLeft: Int = 0) {
 
     fun assignStep(step: Step, minDuration: Int) {
         this.currentStep = step
@@ -17,11 +17,11 @@ data class Worker(val id: Int, var currentStep: Step = Step('0'), var secondsLef
 
     private fun removeCurrentStep(): Step {
         val step = this.currentStep
-        this.currentStep = Step.EMPTY_STEP
-        return step
+        this.currentStep = null
+        return step as Step
     }
 
-    fun notWorking(): Boolean {
-        return this.secondsLeft == 0
+    fun working(): Boolean {
+        return this.secondsLeft > 0
     }
 }

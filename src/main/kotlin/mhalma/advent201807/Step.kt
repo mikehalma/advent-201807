@@ -4,10 +4,6 @@ data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf(
 
     private val STEP_VALUES = 'A'.rangeTo('Z')
 
-    companion object {
-        val EMPTY_STEP: Step = Step('0')
-    }
-
     fun addDependency(dependency: Step) {
         dependencies.add(dependency)
     }
@@ -29,10 +25,6 @@ data class Step(val id: Char, val dependencies: MutableSet<Step> = mutableSetOf(
 
     fun getStepTime(minDuration: Int): Int {
         return STEP_VALUES.indexOf(this.id) + minDuration + 1
-    }
-
-    fun isEmpty(): Boolean {
-        return this == EMPTY_STEP
     }
 
 }

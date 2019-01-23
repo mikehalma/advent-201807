@@ -5,11 +5,11 @@ import kotlin.streams.toList
 class Work(private val workers: List<Worker>, val incompleteSteps: Steps = Steps(), private val minDuration: Int = 0) {
 
     fun stepsInProgress(): List<Step> {
-        return this.workers.filterNot {it.notWorking()}.map {it.currentStep}
+        return this.workers.filter {it.working()}.map {it.currentStep as Step}
     }
 
     fun hasIdleWorkers(): Boolean {
-        return this.workers.count {it.notWorking()} > 0
+        return this.workers.count {!it.working()} > 0
     }
 
     fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
@@ -21,13 +21,13 @@ class Work(private val workers: List<Worker>, val incompleteSteps: Steps = Steps
 
     private fun firstIdle(): Worker? {
         return this.workers
-                .filter {it.notWorking()}
+                .filterNot {it.working()}
                 .firstOrNull()
     }
 
     fun performWork() {
         this.workers
-                .filter {!it.notWorking()}
+                .filter {it.working()}
                 .map {it.performWork()}
                 .filter {it != null}
                 .map {it as Step}

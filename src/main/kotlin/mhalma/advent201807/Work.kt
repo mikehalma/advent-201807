@@ -8,23 +8,6 @@ class Work(private val workers: List<Worker>, val incompleteSteps: Steps = Steps
         return this.workers.filter {it.working()}.map {it.currentStep as Step}
     }
 
-    fun hasIdleWorkers(): Boolean {
-        return this.workers.count {!it.working()} > 0
-    }
-
-    fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
-        return availableSteps.stream()
-                .peek {firstIdle()?.assignStep(it, minDuration)}
-                .filter {stepsInProgress().contains(it)}
-                .toList()
-    }
-
-    private fun firstIdle(): Worker? {
-        return this.workers
-                .filterNot {it.working()}
-                .firstOrNull()
-    }
-
     fun performWork() {
         this.workers
                 .filter {it.working()}
@@ -43,5 +26,22 @@ class Work(private val workers: List<Worker>, val incompleteSteps: Steps = Steps
             availableStepsNotBeingWorked.removeAll(assignedSteps)
         }
 
+    }
+
+    private fun hasIdleWorkers(): Boolean {
+        return this.workers.count {!it.working()} > 0
+    }
+
+    private fun startIdleWorkers(availableSteps: List<Step>, minDuration: Int): List<Step> {
+        return availableSteps.stream()
+                .peek {firstIdle()?.assignStep(it, minDuration)}
+                .filter {stepsInProgress().contains(it)}
+                .toList()
+    }
+
+    private fun firstIdle(): Worker? {
+        return this.workers
+                .filterNot {it.working()}
+                .firstOrNull()
     }
 }
